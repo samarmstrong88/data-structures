@@ -1,78 +1,129 @@
-import React, { Component, useEffect, useRef } from 'react';
+import React, { useRef } from 'react';
+import PropTypes from 'prop-types';
 import { bindActionCreators } from 'redux';
 import { connect } from 'react-redux';
 
 import {
-  addNode,
-  addNodeAndAnimate,
+  pushNode, // eslint-disable-line no-shadow
+  pushNodeAndAnimate,
   popNode,
   setAnimationStep,
+  startAnimation,
+  stopAnimation,
+  toggleAnimation,
 } from '../actions/actionCreators';
-import { buildList } from '../dataTypes/stack';
 
 const Controls = props => {
-  const animationStateRef = useRef(props.animationState);
-  animationStateRef.current = props.animationState;
+  const {
+    /* eslint-disable no-shadow */
+    pushNode,
+    pushNodeAndAnimate,
+    animationState,
+    nodeList,
+    popNode,
+    setAnimationStep,
+    startAnimation,
+    stopAnimation,
+    toggleAnimation,
+  } = props;
+  /* eslint-enable no-shadow */
 
-  const pushNode = function(e) {
-    const nodeVal = e.target.nodeVal.value;
-    props.addNodeAndAnimate(nodeVal);
-    stackInterval(); // assign to var and return
-  };
+  const animationStateRef = useRef(animationState);
+  animationStateRef.current = animationState;
 
-  const stackInterval = function() {
+  function stackInterval(type) {
     const animationInterval = setInterval(() => {
       console.log(animationStateRef.current.step);
       if (
         animationStateRef.current.frame.last ||
         !animationStateRef.current.animating
       ) {
+        stopAnimation();
+        if (type === 'pop') {
+          popNode();
+          setAnimationStep('stack', type, 'next');
+        }
+        // setAnimationStep('stack', 'static', 0);
         clearInterval(animationInterval);
       } else {
-        props.setAnimationStep('stack', 'push', 'next');
+        setAnimationStep('stack', type, 'next');
       }
     }, 1000);
-  };
+  }
 
-  // useEffect(() => {
-  //   if (props.animationState.frame && props.animationState.frame.last) {
-  //     console.log('clear');
-  //     clearInterval(animationInterval);
-  //   }
-  // });
+  function addNode(e) {
+    const nodeVal = e.target.nodeVal.value;
+    if (animationState.active) {
+      pushNodeAndAnimate(nodeVal);
+      stackInterval('push');
+    } else pushNode();
+  }
+
+  function removeNode(e) {
+    if (animationState.active) {
+      startAnimation('stack', 'pop');
+      stackInterval('pop');
+    } else {
+      popNode();
+    }
+  }
 
   return (
     <div>
       <form
         onSubmit={e => {
           e.preventDefault();
-          pushNode(e);
+          addNode(e);
           e.target.reset();
         }}
       >
         <h2>Some Controls</h2>
+        <div>
+          <input
+            type="checkbox"
+            name="toggle-anim"
+            checked={animationState.active}
+            onClick={toggleAnimation}
+          />
+        </div>
         <input type="number" name="nodeVal"></input>
         <button type="submit">Add</button>
       </form>
-      <button type="button" onClick={props.popNode}>
+      <button type="button" onClick={removeNode}>
         Pop Node
       </button>
       <div className="animation-controls">
         <button
           type="button"
-          onClick={() => props.setAnimationStep('stack', 'push', 'prev')}
+          onClick={() =>
+            setAnimationStep('stack', animationState.animationType, 'prev')
+          }
         >
           Prev animation Step
         </button>
         <button
           type="button"
-          onClick={() => props.setAnimationStep('stack', 'push', 'next')}
+          onClick={() =>
+            setAnimationStep('stack', animationState.animationType, 'next')
+          }
         >
           Next animation Step
         </button>
       </div>
     </div>
   );
+};
+
+Controls.propTypes = {
+  pushNode: PropTypes.func,
+  pushNodeAndAnimate: PropTypes.func,
+  animationState: PropTypes.object.isRequired,
+  nodeList: PropTypes.object.isRequired,
+  popNode: PropTypes.func,
+  setAnimationStep: PropTypes.func,
+  startAnimation: PropTypes.func,
+  stopAnimation: PropTypes.func,
+  toggleAnimation: PropTypes.func,
 };
 
 function mapStateToProps({ nodeList, animationState }) {
@@ -84,7 +135,15 @@ function mapStateToProps({ nodeList, animationState }) {
 
 function mapDispatchToProps(dispatch) {
   return bindActionCreators(
-    { addNode, addNodeAndAnimate, popNode, setAnimationStep },
+    {
+      pushNode,
+      pushNodeAndAnimate,
+      popNode,
+      startAnimation,
+      setAnimationStep,
+      stopAnimation,
+      toggleAnimation,
+    },
     dispatch
   );
 }

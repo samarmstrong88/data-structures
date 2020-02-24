@@ -1,15 +1,7 @@
-export function addNode(nodeVal) {
+export function pushNode(nodeVal) {
   return {
-    type: 'ADD_NODE',
+    type: 'PUSH_NODE',
     nodeVal,
-  };
-}
-
-// adds node and sets animation state to start
-export function addNodeAndAnimate(nodeVal) {
-  return function(dispatch) {
-    dispatch(addNode(nodeVal));
-    dispatch(startAnimation('stack', 'push'));
   };
 }
 
@@ -29,6 +21,19 @@ export function startAnimation(dataType, operation) {
 export function stopAnimation() {
   return {
     type: 'STOP_ANIMATION',
+  };
+}
+
+export function toggleAnimation() {
+  return {
+    type: 'TOGGLE_ANIMATION',
+  };
+}
+// adds node and sets animation state to start
+export function pushNodeAndAnimate(nodeVal) {
+  return function(dispatch) {
+    dispatch(pushNode(nodeVal));
+    dispatch(startAnimation('stack', 'push'));
   };
 }
 

@@ -4,7 +4,7 @@ const initialNodeList = null;
 
 const nodeList = (state = initialNodeList, action) => {
   switch (action.type) {
-    case 'ADD_NODE':
+    case 'PUSH_NODE':
       if (state.head) {
         const key = Object.keys(state).length;
         return {
@@ -18,7 +18,7 @@ const nodeList = (state = initialNodeList, action) => {
         head: new StackNode(action.nodeVal),
       };
 
-    case 'POP_NODE':
+    case 'POP_NODE': {
       let nextKey;
       if (state.head) {
         nextKey = state.head.next;
@@ -36,7 +36,7 @@ const nodeList = (state = initialNodeList, action) => {
       return {
         head: null,
       };
-
+    }
     default:
       return state;
   }

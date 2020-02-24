@@ -3,6 +3,7 @@ import { composeWithDevTools } from 'redux-devtools-extension';
 import thunk from 'redux-thunk';
 
 import rootReducer from './reducers/index';
+import { getAnimationFrame } from './animation/animationSteps';
 
 const defaultState = {
   nodeList: {
@@ -18,9 +19,10 @@ const defaultState = {
     nodesPerColumn: 5,
   },
   animationState: {
+    active: true,
     animating: false,
-    animationType: 'pushStackNode',
-    frame: null,
+    animationType: null,
+    frame: getAnimationFrame('stack', 'static', 0),
     step: 2,
     lastStep: 2,
   },

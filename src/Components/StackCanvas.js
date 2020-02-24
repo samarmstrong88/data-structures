@@ -1,61 +1,62 @@
-import React, { useEffect, useLayoutEffect } from 'react';
+import React from 'react';
 import { connect } from 'react-redux';
 import { bindActionCreators } from 'redux';
-import Konva from 'konva';
-import { Stage, Layer, Circle, Text, Arrow, Label, Tag } from 'react-konva';
+
+import { Stage, Layer, Text, Arrow, Label, Tag } from 'react-konva';
+import PropTypes from 'prop-types';
 
 import { setAnimationStep } from '../actions/actionCreators';
 import StackNode from './StackNode';
-import { buildList, buildDisplayArray } from '../dataTypes/stack';
-import { getAnimationFrame } from '../animation/animationSteps.js';
+import { buildDisplayArray } from '../dataTypes/stack';
 
 const stageStyle = {
   border: '1px solid black',
   display: 'inline-block',
 };
 
+function getDisplayProps(
+  _node,
+  _maxDepth,
+  _firstColumnX,
+  _columns,
+  _nodesPerColumn,
+  _spacing
+) {
+  const x =
+    _firstColumnX *
+    (_columns - Math.floor((_maxDepth - _node.depth) / _nodesPerColumn));
+  const y = 450 - ((_maxDepth - _node.depth) % 5) * _spacing;
+  return [x, y];
+}
+
 const StackCanvas = props => {
-
-  useLayoutEffect(()=> {if (props.animationState.frame === null) props.setAnimationStep('stack', 'static')})
-
-
-
-  let nodes;
+  /* eslint-disable no-shadow */
+  const { animationState, displaySettings, nodeList } = props;
+  /* eslint-enable no-shadow */
   let displayObj;
-  if (props.nodeList.head) {
-    nodes = { head: buildList(props.nodeList) };
-    displayObj = buildDisplayArray(props.nodeList); 
+
+  if (nodeList.head) {
+    displayObj = buildDisplayArray(nodeList);
   } else {
-    nodes = {};
     displayObj = {};
   }
-
   const {
     radius,
     spacing,
     stageHeight,
     stageWidth,
     nodesPerColumn,
-  } = props.displaySettings;
+  } = displaySettings;
 
-  let showFirst, headLabelDepth, headArrow, newHeadLabel;
-
-  if (props.animationState.frame) {
-    ({ showFirst, headLabelDepth, headArrow, newHeadLabel } = props.animationState.frame);
-  }
-  // } else { const {headLabelDepth, headArrow, newHeadLabel} = getAnimationFrame('stack', 'static', 0)}
+  const {
+    showFirst,
+    headLabelDepth,
+    headArrow,
+    newHeadLabel,
+  } = animationState.frame;
 
   const columns = Math.floor((displayObj.maxDepth - 1) / nodesPerColumn) + 1;
   const firstColumnX = stageWidth / (columns + 1);
-
-  // move this fn outside component
-  function getDisplayProps(node_, maxDepth_, nodesPerColumn_, spacing_) {
-    const x =
-      firstColumnX *
-      (columns - Math.floor((maxDepth_ - node_.depth) / nodesPerColumn_));
-    const y = 450 - ((maxDepth_ - node_.depth) % 5) * spacing_;
-    return [x, y];
-  }
 
   return (
     <Stage height={stageHeight} width={stageWidth} style={stageStyle}>
@@ -65,17 +66,19 @@ const StackCanvas = props => {
             [node.x, node.y] = getDisplayProps(
               node,
               displayObj.maxDepth,
+              firstColumnX,
+              columns,
               nodesPerColumn,
               spacing
             );
 
-            const displayNode = ( showFirst || node.depth > 1 ? 
-              <StackNode x={node.x} y={node.y} radius={radius} node={node} /> :
-              null
-            );
+            const displayNode =
+              showFirst || node.depth > 1 ? (
+                <StackNode x={node.x} y={node.y} radius={radius} node={node} />
+              ) : null;
 
             let label = null;
-            if (node.depth == headLabelDepth) {
+            if (node.depth === headLabelDepth) {
               label = (
                 <Label x={node.x - radius} y={node.y}>
                   <Tag
@@ -86,6 +89,24 @@ const StackCanvas = props => {
                   />
                   <Text
                     text="HEAD"
+                    fontFamily="Calibri"
+                    fontSize={18}
+                    padding={5}
+                    fill="white"
+                  />
+                </Label>
+              );
+            } else if (node.depth === 1 && newHeadLabel) {
+              label = (
+                <Label x={node.x - radius} y={node.y}>
+                  <Tag
+                    fill="green"
+                    pointerDirection="right"
+                    pointerWidth={20}
+                    pointerHeight={25}
+                  />
+                  <Text
+                    text="NEW HEAD"
                     fontFamily="Calibri"
                     fontSize={18}
                     padding={5}
@@ -109,8 +130,8 @@ const StackCanvas = props => {
                     node.x + firstColumnX - radius,
                     node.y - (nodesPerColumn - 1) * spacing,
                   ]}
-                  fill={node.depth == 1 ? headArrow : 'black'}
-                  stroke={node.depth == 1 ? headArrow : 'black'}
+                  fill={node.depth === 1 ? headArrow : 'black'}
+                  stroke={node.depth === 1 ? headArrow : 'black'}
                 />
               ) : (
                 <Arrow
@@ -120,15 +141,41 @@ const StackCanvas = props => {
                     node.x,
                     node.y + spacing - radius,
                   ]}
-                  fill={node.depth == 1 ? headArrow : 'black'}
-                  stroke={node.depth == 1 ? headArrow : 'black'}
+                  fill={node.depth === 1 ? headArrow : 'black'}
+                  stroke={node.depth === 1 ? headArrow : 'black'}
                 />
               );
-            return node.next ? [displayNode, arrow, label] : displayNode;
+            return node.next
+              ? [displayNode, arrow, label]
+              : [displayNode, label];
           })}
       </Layer>
     </Stage>
   );
+};
+
+StackCanvas.propTypes = {
+  animationState: {
+    animating: PropTypes.bool,
+    animationType: PropTypes.string,
+    frame: {
+      headArrow: PropTypes.string,
+      headLabelDepth: PropTypes.number,
+      last: PropTypes.bool,
+      newHeadLabel: PropTypes.bool,
+      showFirst: PropTypes.bool,
+    },
+    lastStep: PropTypes.number,
+    step: PropTypes.number,
+  },
+  displaySettings: {
+    radius: PropTypes.number,
+    spacing: PropTypes.number,
+    stageHeight: PropTypes.number,
+    stageWidth: PropTypes.number,
+    nodesPerColumn: PropTypes.number,
+  },
+  nodeList: PropTypes.object,
 };
 
 function mapStateToProps({ nodeList, displaySettings, animationState }) {
