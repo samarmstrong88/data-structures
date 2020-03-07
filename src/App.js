@@ -1,18 +1,19 @@
 import React from 'react';
 import { Provider } from 'react-redux';
 
-import StackCanvas from './Components/StackCanvas'
-import Controls from './Components/Controls';
-import './App.css';
 import store from './store';
+import AnimationControls from './Components/AnimationControls';
+import Controls from './Components/Controls';
+import StackCanvas from './Components/StackCanvas';
+import './App.css';
 
 function App() {
   return (
     <Provider store={store}>
       <div className="App">
-        <StackCanvas>
-        </StackCanvas>
+        <StackCanvas></StackCanvas>
         <Controls />
+        <AnimationControls />
       </div>
     </Provider>
   );

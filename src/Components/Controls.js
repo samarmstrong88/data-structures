@@ -4,7 +4,7 @@ import { bindActionCreators } from 'redux';
 import { connect } from 'react-redux';
 
 import {
-  pushNode, // eslint-disable-line no-shadow
+  pushNode,
   pushNodeAndAnimate,
   popNode,
   setAnimationStep,
@@ -92,24 +92,6 @@ const Controls = props => {
       <button type="button" onClick={removeNode}>
         Pop Node
       </button>
-      <div className="animation-controls">
-        <button
-          type="button"
-          onClick={() =>
-            setAnimationStep('stack', animationState.animationType, 'prev')
-          }
-        >
-          Prev animation Step
-        </button>
-        <button
-          type="button"
-          onClick={() =>
-            setAnimationStep('stack', animationState.animationType, 'next')
-          }
-        >
-          Next animation Step
-        </button>
-      </div>
     </div>
   );
 };
